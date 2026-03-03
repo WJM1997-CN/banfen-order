@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nanchang Banfen - Ordering</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#111827; --card2:#0f172a; --text:#e5e7eb; --muted:#9ca3af;
+      --pri:#22c55e; --warn:#f59e0b; --bad:#ef4444; --line:#1f2937;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#070a10, #0b0f14 40%, #070a10); color:var(--text);
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;}
+    a{color:inherit}
+    .wrap{max-width:980px;margin:0 auto;padding:18px}
+    .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:36px;height:36px;border-radius:12px;background:radial-gradient(circle at 30% 30%, #34d399, #16a34a 55%, #065f46);
+      box-shadow:0 10px 30px rgba(34,197,94,.18)}
+    .brand h1{font-size:16px;margin:0;letter-spacing:.2px}
+    .pill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.02)}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--line); border-radius:18px; padding:14px; box-shadow:0 18px 60px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:14px;color:#f3f4f6}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:10px 0}
+    .muted{color:var(--muted);font-size:12px;line-height:1.35}
+    .btn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.03);
+      color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn:hover{background:rgba(255,255,255,.06)}
+    .btn.primary{border-color:rgba(34,197,94,.5); background:rgba(34,197,94,.12)}
+    .btn.primary:hover{background:rgba(34,197,94,.18)}
+    .btn.bad{border-color:rgba(239,68,68,.6); background:rgba(239,68,68,.12)}
+    .btn.bad:hover{background:rgba(239,68,68,.18)}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:8px 10px;border-radius:10px;font-size:12px}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .seg{display:flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+    .seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 10px;cursor:pointer}
+    .seg button.on{color:var(--text);background:rgba(255,255,255,.05)}
+    .field{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+    label{font-size:12px;color:var(--muted)}
+    input[type="number"], textarea, select{
+      width:100%;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);
+      border-radius:12px;padding:10px 12px;outline:none
+    }
+    textarea{min-height:90px;resize:vertical}
+    .spice{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    @media (max-width:520px){.spice{grid-template-columns:repeat(2,1fr)}}
+    .radio{
+      border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(255,255,255,.02);
+      display:flex;gap:8px;align-items:center;cursor:pointer; user-select:none
+    }
+    .radio input{accent-color:var(--pri)}
+    .price{font-size:22px;font-weight:800}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+      background:rgba(17,24,39,.92);border:1px solid var(--line);padding:10px 12px;border-radius:14px;
+      color:var(--text);box-shadow:0 18px 60px rgba(0,0,0,.45);display:none;max-width:90vw}
+    .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+    .badge.ok{border-color:rgba(34,197,94,.5); color:#bbf7d0; background:rgba(34,197,94,.10)}
+    .badge.wip{border-color:rgba(245,158,11,.5); color:#fde68a; background:rgba(245,158,11,.10)}
+    .badge.done{border-color:rgba(59,130,246,.5); color:#bfdbfe; background:rgba(59,130,246,.10)}
+    .badge.cancel{border-color:rgba(239,68,68,.6); color:#fecaca; background:rgba(239,68,68,.10)}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--line);padding:10px 8px;font-size:12px;vertical-align:top}
+    th{color:var(--muted);text-align:left;font-weight:700}
+    .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .bigNo{font-size:44px;font-weight:900;letter-spacing:2px}
+    .center{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;padding:12px 0}
+    .hint{font-size:12px;color:var(--muted);text-align:center;line-height:1.4}
+    .right{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+    .kvs{display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:12px}
+    .kvs div:nth-child(odd){color:var(--muted)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>南昌拌粉 · 点餐</h1>
+        <div class="muted">到店付款 · 取餐号每日从 001 重置</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span class="pill mono" id="todayKey"></span>
+      <button class="btn small ghost" id="goAdmin">店长后台</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Left: User -->
+    <div class="card" id="userCard">
+      <h2>顾客点餐</h2>
+
+      <div class="row">
+        <div class="muted">就餐方式（仅记录）</div>
+        <div class="seg" role="tablist" aria-label="Dining mode">
+          <button id="modeDineIn" class="on" type="button">堂食</button>
+          <button id="modeTakeout" type="button">外带</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row">
+        <div>
+          <div style="font-weight:800">南昌拌粉</div>
+          <div class="muted">仅售单品 · 辣度必选</div>
+        </div>
+        <div class="price" id="price">¥ 0</div>
+      </div>
+
+      <div class="field">
+        <label>辣度（必选）</label>
+        <div class="spice" id="spiceGroup">
+          <label class="radio"><input type="radio" name="spice" value="不辣" />不辣</label>
+          <label class="radio"><input type="radio" name="spice" value="微辣" />微辣</label>
+          <label class="radio"><input type="radio" name="spice" value="中辣" />中辣</label>
+          <label class="radio"><input type="radio" name="spice" value="特辣" />特辣</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>数量</label>
+        <input id="qty" type="number" min="1" step="1" value="1" />
+      </div>
+
+      <div class="field">
+        <label>备注（整单）</label>
+        <textarea id="remark" placeholder="例如：不要葱、少油、不要香菜…"></textarea>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div class="muted">支付方式：到店付款</div>
+        <button class="btn primary" id="submitOrder" type="button">提交订单</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2 style="margin-top:0">本机最近订单</h2>
+      <div class="muted">无登录：仅展示本设备订单记录。</div>
+      <div style="margin-top:10px" id="recentOrders"></div>
+    </div>
+
+    <!-- Right: Order detail / success -->
+    <div class="card" id="detailCard">
+      <h2>订单信息</h2>
+      <div id="detailEmpty" class="center">
+        <div class="muted">下单后会在这里显示取餐号与状态</div>
+      </div>
+
+      <div id="detail" style="display:none">
+        <div class="center">
+          <div class="muted">取餐号</div>
+          <div class="bigNo mono" id="pickupNo">001</div>
+          <div id="statusBadge" class="badge ok">已下单</div>
+          <div class="hint">到店付款后等待叫号取餐</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="kvs">
+          <div>订单号</div><div class="mono" id="orderId"></div>
+          <div>下单时间</div><div id="createdAt"></div>
+          <div>就餐方式</div><div id="diningMode"></div>
+          <div>商品</div><div>南昌拌粉</div>
+          <div>辣度</div><div id="spice"></div>
+          <div>数量</div><div id="quantity"></div>
+          <div>备注</div><div id="detailRemark"></div>
+          <div>应付金额</div><div id="total"></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="right">
+          <button class="btn bad" id="cancelOrder" type="button">取消订单</button>
+          <button class="btn" id="refreshOrder" type="button">刷新状态</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin -->
+  <div class="card" id="adminCard" style="margin-top:14px; display:none">
+    <div class="row">
+      <h2 style="margin:0">店长后台</h2>
+      <div class="right">
+        <button class="btn small" id="adminClose" type="button">返回点餐</button>
+      </div>
+    </div>
+
+    <div class="row" style="align-items:flex-end; flex-wrap:wrap">
+      <div style="min-width:220px">
+        <div class="muted" style="margin-bottom:6px">状态筛选</div>
+        <select id="adminFilter">
+          <option value="ALL">全部</option>
+          <option value="PLACED">已下单</option>
+          <option value="IN_PROGRESS">制作中</option>
+          <option value="DONE">已完成</option>
+          <option value="CANCELLED">已取消</option>
+        </select>
+      </div>
+
+      <div style="min-width:220px">
+        <div class="muted" style="margin-bottom:6px">价格设置（南昌拌粉）</div>
+        <div style="display:flex; gap:8px">
+          <input id="adminPrice" type="number" min="0" step="1" />
+          <button class="btn small" id="savePrice" type="button">保存</button>
+        </div>
+      </div>
+
+      <div style="flex:1"></div>
+      <button class="btn small ghost" id="exportData" type="button">导出JSON</button>
+      <button class="btn small ghost" id="clearData" type="button">清空本机数据</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <div id="adminTableWrap"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /**************
+   * Storage keys
+   **************/
+  const K = {
+    PRICE: "banfen_price_v1",
+    ORDERS: "banfen_orders_v1",
+    COUNTER_PREFIX: "banfen_counter_", // + YYYYMMDD
+    LAST_VIEWED: "banfen_last_viewed_order_id_v1"
+  };
+
+  /**************
+   * Utilities
+   **************/
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  function pad3(n){ return String(n).padStart(3,'0'); }
+
+  function todayKey(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}${m}${day}`;
+  }
+
+  function fmtTime(ts){
+    const d = new Date(ts);
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `${y}-${m}-${day} ${hh}:${mm}`;
+  }
+
+  function toast(msg){
+    const el = $("#toast");
+    el.textContent = msg;
+    el.style.display = "block";
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=> el.style.display="none", 2200);
+  }
+
+  function loadJSON(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){
+      return fallback;
+    }
+  }
+  function saveJSON(key, val){
+    localStorage.setItem(key, JSON.stringify(val));
+  }
+
+  /**************
+   * Domain model
+   **************/
+  const Status = {
+    PLACED: "PLACED",
+    IN_PROGRESS: "IN_PROGRESS",
+    DONE: "DONE",
+    CANCELLED: "CANCELLED"
+  };
+
+  function statusLabel(s){
+    switch(s){
+      case Status.PLACED: return "已下单";
+      case Status.IN_PROGRESS: return "制作中";
+      case Status.DONE: return "已完成";
+      case Status.CANCELLED: return "已取消";
+      default: return s;
+    }
+  }
+
+  function statusBadgeClass(s){
+    switch(s){
+      case Status.PLACED: return "ok";
+      case Status.IN_PROGRESS: return "wip";
+      case Status.DONE: return "done";
+      case Status.CANCELLED: return "cancel";
+      default: return "";
+    }
+  }
+
+  function canCancel(s){
+    return s !== Status.DONE && s !== Status.CANCELLED;
+  }
+
+  function nextPickupNo(){
+    const key = K.COUNTER_PREFIX + todayKey();
+    const n = Number(localStorage.getItem(key) || "0") + 1;
+    localStorage.setItem(key, String(n));
+    return pad3(n);
+  }
+
+  function getPrice(){
+    const p = Number(localStorage.getItem(K.PRICE));
+    return Number.isFinite(p) ? p : 12; // 默认价格：12（你可在后台修改）
+  }
+
+  function setPrice(p){
+    localStorage.setItem(K.PRICE, String(p));
+  }
+
+  function getOrders(){
+    return loadJSON(K.ORDERS, []);
+  }
+
+  function saveOrders(orders){
+    saveJSON(K.ORDERS, orders);
+  }
+
+  function createOrder({diningMode, spice, qty, remark}){
+    const price = getPrice();
+    const total = price * qty;
+    const id = crypto.randomUUID ? crypto.randomUUID() : ("id_" + Date.now() + "_" + Math.random().toString(16).slice(2));
+    const order = {
+      order_id: id,
+      pickup_no: nextPickupNo(),
+      dining_mode: diningMode, // "堂食"/"外带"
+      created_at: Date.now(),
+      status: Status.PLACED,
+      total_amount: total,
+      remark: remark || "",
+      line: {
+        item_id: "BANFEN_001",
+        name: "南昌拌粉",
+        quantity: qty,
+        spice_level: spice
+      }
+    };
+    const orders = getOrders();
+    orders.unshift(order);
+    saveOrders(orders);
+    localStorage.setItem(K.LAST_VIEWED, id);
+    return order;
+  }
+
+  function updateOrderStatus(orderId, newStatus){
+    const orders = getOrders();
+    const idx = orders.findIndex(o => o.order_id === orderId);
+    if(idx === -1) return null;
+
+    // 简单状态约束：取消后不允许继续推进
+    if(orders[idx].status === Status.CANCELLED && newStatus !== Status.CANCELLED){
+      return orders[idx];
+    }
+    orders[idx].status = newStatus;
+    saveOrders(orders);
+    return orders[idx];
+  }
+
+  function findOrder(orderId){
+    return getOrders().find(o => o.order_id === orderId) || null;
+  }
+
+  /**************
+   * UI state
+   **************/
+  let diningMode = "堂食";
+
+  function renderTop(){
+    $("#todayKey").textContent = "Today " + todayKey();
+  }
+
+  function renderPrice(){
+    $("#price").textContent = "¥ " + getPrice();
+  }
+
+  function getSelectedSpice(){
+    const el = document.querySelector('input[name="spice"]:checked');
+    return el ? el.value : "";
+  }
+
+  function renderRecent(){
+    const orders = getOrders().slice(0, 6);
+    const wrap = $("#recentOrders");
+    if(orders.length === 0){
+      wrap.innerHTML = `<div class="muted">暂无订单</div>`;
+      return;
+    }
+    wrap.innerHTML = orders.map(o => {
+      const badge = `<span class="badge ${statusBadgeClass(o.status)}">${statusLabel(o.status)}</span>`;
+      return `
+        <div class="card" style="padding:12px; margin-bottom:10px; background:rgba(0,0,0,.15)">
+          <div class="row" style="margin:0">
+            <div>
+              <div style="font-weight:800">取餐号 <span class="mono">${o.pickup_no}</span> ${badge}</div>
+              <div class="muted">${fmtTime(o.created_at)} · ${o.dining_mode} · ${o.line.spice_level} · x${o.line.quantity}</div>
+            </div>
+            <div class="right">
+              <button class="btn small" data-view="${o.order_id}" type="button">查看</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    wrap.querySelectorAll("button[data-view]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const id = btn.getAttribute("data-view");
+        localStorage.setItem(K.LAST_VIEWED, id);
+        renderDetail(id);
+        window.scrollTo({top: 0, behavior:"smooth"});
+      });
+    });
+  }
+
+  function renderDetail(orderId){
+    const o = findOrder(orderId);
+    if(!o){
+      $("#detailEmpty").style.display = "flex";
+      $("#detail").style.display = "none";
+      return;
+    }
+    $("#detailEmpty").style.display = "none";
+    $("#detail").style.display = "block";
+
+    $("#pickupNo").textContent = o.pickup_no;
+    $("#orderId").textContent = o.order_id;
+    $("#createdAt").textContent = fmtTime(o.created_at);
+    $("#diningMode").textContent = o.dining_mode;
+    $("#spice").textContent = o.line.spice_level;
+    $("#quantity").textContent = String(o.line.quantity);
+    $("#detailRemark").textContent = o.remark ? o.remark : "—";
+    $("#total").textContent = "¥ " + o.total_amount;
+
+    const badge = $("#statusBadge");
+    badge.className = "badge " + statusBadgeClass(o.status);
+    badge.textContent = statusLabel(o.status);
+
+    const cancelBtn = $("#cancelOrder");
+    cancelBtn.disabled = !canCancel(o.status);
+    cancelBtn.style.opacity = cancelBtn.disabled ? .5 : 1;
+  }
+
+  function renderAdmin(){
+    const filter = $("#adminFilter").value;
+    const orders = getOrders();
+    const filtered = filter === "ALL" ? orders : orders.filter(o => o.status === filter);
+
+    const wrap = $("#adminTableWrap");
+    if(filtered.length === 0){
+      wrap.innerHTML = `<div class="muted">暂无订单</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>取餐号</th>
+            <th>时间</th>
+            <th>明细</th>
+            <th>备注</th>
+            <th>状态</th>
+            <th style="width:220px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(o => `
+            <tr>
+              <td class="mono" style="font-weight:900">${o.pickup_no}</td>
+              <td>${fmtTime(o.created_at)}<div class="muted">${o.dining_mode}</div></td>
+              <td>
+                南昌拌粉 x${o.line.quantity}
+                <div class="muted">辣度：${o.line.spice_level}</div>
+                <div class="muted">应付：¥ ${o.total_amount}（到店付）</div>
+              </td>
+              <td>${o.remark ? escapeHTML(o.remark) : '<span class="muted">—</span>'}</td>
+              <td><span class="badge ${statusBadgeClass(o.status)}">${statusLabel(o.status)}</span></td>
+              <td>
+                <div style="display:flex; flex-wrap:wrap; gap:6px">
+                  <button class="btn small" data-act="view" data-id="${o.order_id}">查看</button>
+                  <button class="btn small" data-act="wip" data-id="${o.order_id}" ${o.status===Status.CANCELLED?'disabled style="opacity:.5"':''}>制作中</button>
+                  <button class="btn small" data-act="done" data-id="${o.order_id}" ${o.status===Status.CANCELLED?'disabled style="opacity:.5"':''}>已完成</button>
+                  <button class="btn small bad" data-act="cancel" data-id="${o.order_id}" ${o.status===Status.DONE?'disabled style="opacity:.5"':''}>取消</button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+    wrap.querySelectorAll("button[data-act]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const id = btn.getAttribute("data-id");
+        const act = btn.getAttribute("data-act");
+        if(act === "view"){
+          localStorage.setItem(K.LAST_VIEWED, id);
+          renderDetail(id);
+          toast("已在右侧打开订单");
+          return;
+        }
+        if(act === "wip"){
+          updateOrderStatus(id, Status.IN_PROGRESS);
+          toast("已标记为制作中");
+        }else if(act === "done"){
+          updateOrderStatus(id, Status.DONE);
+          toast("已标记为已完成");
+        }else if(act === "cancel"){
+          updateOrderStatus(id, Status.CANCELLED);
+          toast("已取消订单");
+        }
+        refreshAll();
+      });
+    });
+  }
+
+  function escapeHTML(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[s]));
+  }
+
+  function refreshAll(){
+    renderPrice();
+    renderRecent();
+    const last = localStorage.getItem(K.LAST_VIEWED);
+    if(last) renderDetail(last);
+    renderAdmin();
+  }
+
+  /**************
+   * Events
+   **************/
+  function init(){
+    renderTop();
+    renderPrice();
+
+    // dining mode toggle
+    $("#modeDineIn").addEventListener("click", ()=>{
+      diningMode = "堂食";
+      $("#modeDineIn").classList.add("on");
+      $("#modeTakeout").classList.remove("on");
+      toast("已选择：堂食");
+    });
+    $("#modeTakeout").addEventListener("click", ()=>{
+      diningMode = "外带";
+      $("#modeTakeout").classList.add("on");
+      $("#modeDineIn").classList.remove("on");
+      toast("已选择：外带");
+    });
+
+    // radio click whole card
+    $$("#spiceGroup .radio").forEach(label=>{
+      label.addEventListener("click", ()=>{
+        const input = label.querySelector("input");
+        input.checked = true;
+      });
+    });
+
+    // submit
+    $("#submitOrder").addEventListener("click", ()=>{
+      const spice = getSelectedSpice();
+      const qty = Number($("#qty").value);
+      const remark = $("#remark").value.trim();
+
+      if(!spice){
+        toast("请选择辣度（必选）");
+        return;
+      }
+      if(!Number.isFinite(qty) || qty < 1){
+        toast("数量至少为 1");
+        return;
+      }
+
+      const order = createOrder({diningMode, spice, qty, remark});
+      toast("下单成功，已生成取餐号 " + order.pickup_no);
+
+      // reset form
+      $("#remark").value = "";
+      $("#qty").value = "1";
+      document.querySelectorAll('input[name="spice"]').forEach(r=> r.checked = false);
+
+      refreshAll();
+      renderDetail(order.order_id);
+    });
+
+    $("#refreshOrder").addEventListener("click", ()=>{
+      const last = localStorage.getItem(K.LAST_VIEWED);
+      if(last) renderDetail(last);
+      toast("已刷新");
+    });
+
+    $("#cancelOrder").addEventListener("click", ()=>{
+      const last = localStorage.getItem(K.LAST_VIEWED);
+      if(!last) return;
+      const o = findOrder(last);
+      if(!o) return;
+      if(!canCancel(o.status)){
+        toast("该订单无法取消");
+        return;
+      }
+      updateOrderStatus(last, Status.CANCELLED);
+      toast("订单已取消");
+      refreshAll();
+    });
+
+    // admin open/close
+    $("#goAdmin").addEventListener("click", ()=>{
+      $("#adminCard").style.display = "block";
+      toast("已进入店长后台");
+      window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});
+      refreshAll();
+    });
+    $("#adminClose").addEventListener("click", ()=>{
+      $("#adminCard").style.display = "none";
+      toast("已返回点餐");
+      window.scrollTo({top: 0, behavior:"smooth"});
+    });
+
+    // admin filter
+    $("#adminFilter").addEventListener("change", ()=> renderAdmin());
+
+    // admin price
+    $("#adminPrice").value = String(getPrice());
+    $("#savePrice").addEventListener("click", ()=>{
+      const p = Number($("#adminPrice").value);
+      if(!Number.isFinite(p) || p < 0){
+        toast("价格需为非负数字");
+        return;
+      }
+      setPrice(Math.round(p));
+      toast("价格已保存");
+      refreshAll();
+    });
+
+    // export / clear
+    $("#exportData").addEventListener("click", ()=>{
+      const data = {
+        date: new Date().toISOString(),
+        price: getPrice(),
+        todayKey: todayKey(),
+        counterToday: Number(localStorage.getItem(K.COUNTER_PREFIX + todayKey()) || "0"),
+        orders: getOrders()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "banfen-data.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("已导出JSON");
+    });
+
+    $("#clearData").addEventListener("click", ()=>{
+      if(!confirm("确定清空本机所有订单与取号计数？此操作不可恢复。")) return;
+      localStorage.removeItem(K.ORDERS);
+      localStorage.removeItem(K.LAST_VIEWED);
+      localStorage.removeItem(K.COUNTER_PREFIX + todayKey());
+      toast("已清空本机数据");
+      refreshAll();
+    });
+
+    // initial
+    refreshAll();
+    const last = localStorage.getItem(K.LAST_VIEWED);
+    if(last) renderDetail(last);
+  }
+
+  init();
+</script>
+</body>
+</html>
